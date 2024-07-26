@@ -3,10 +3,6 @@ let listOfID = [];
 let objectOfID = {};
 let i = 0;
 
-const WordExtractor = require("word-extractor");
-const extractor = new WordExtractor();
-const extracted = extractor.extract("src/API Test new Programmer.docx");
-
 fetch('src/API Test new Programmer.txt')
 .then(response => response.text()) 
 .then(textString => { 

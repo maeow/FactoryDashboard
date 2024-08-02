@@ -46,7 +46,7 @@ body{
 
 .mini{
     width: calc(50% - 3.5px);
-    justify-content: flex-start;
+    /* justify-content: flex-start; */
 }
 
 .row{

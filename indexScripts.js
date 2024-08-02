@@ -3,29 +3,41 @@ let listOfID = [];
 let objectOfID = {};
 let i = 0;
 
-fetch('src/API Test new Programmer.txt')
-.then(response => response.text()) 
-.then(textString => { 
-    textString = textString.replaceAll("]", ",").replaceAll("[", "");
+//import docx file 
+const docxUrl = 'src/API Test new Programmer.docx';
+fetch(docxUrl)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+      return response.arrayBuffer();
+    })
+  .then(arrayBuffer => {
+    return mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+  })
+  .then(result => {
+    textString = (result.value).replaceAll("]", ",").replaceAll("[", "");
     text = "["+textString.slice(0, textString.lastIndexOf(','))+"]";
     const dataJSON =JSON.parse(text);
     dataJSON.forEach((data) => {
-        if(!listOfID.includes(data['SemiBatch'])){
-          listOfID.push(data['SemiBatch']);
-          objectOfID[data['SemiBatch']] = [];
-          objectOfID[data['SemiBatch']][objectOfID[data['SemiBatch']].length] = data["Act_Weight"];
-        }
-        else{
-          objectOfID[data['SemiBatch']][objectOfID[data['SemiBatch']].length] = data["Act_Weight"];
-        }
-
-        if(!listOfTime.includes(data["DateTime"])){
-          listOfTime.push(data["DateTime"]);
-        }
+      if(!listOfID.includes(data['SemiBatch'])){
+        listOfID.push(data['SemiBatch']);
+        objectOfID[data['SemiBatch']] = [];
+        objectOfID[data['SemiBatch']][objectOfID[data['SemiBatch']].length] = data["Act_Weight"];
+      }
+      else{
+        objectOfID[data['SemiBatch']][objectOfID[data['SemiBatch']].length] = data["Act_Weight"];
+      }
+      
+      if(!listOfTime.includes(data["DateTime"])){
+        listOfTime.push(data["DateTime"]);
+      }
     });
-    console.log(objectOfID)
     plotGraph();
-});
+    })
+  .catch(error => {
+    console.error('Error:', error);
+  });
 
 //gauge speed
 const gaugeElement = document.querySelector(".gauge");
@@ -41,10 +53,33 @@ function setGaugeValue(value) {
   )}%`;
 }
 
+//random gague value
 function myTimer() {
   setGaugeValue((Math.random() * 100)/100);
 }
 
+//update graph
+function updatePlot(){
+  var updateY = [];
+  listOfID.forEach(id => {
+    var listOfData = [].concat(objectOfID[id].slice(0, i+1));
+    for (let j = 0; j < listOfTime.length;j++) {
+      if(j>i){
+        listOfData.push(null);
+      }
+    }
+      updateY.push(listOfData);
+  });
+
+  const range = size => Array.from(Array(size).keys());
+
+  Plotly.restyle('myDiv', { y: updateY }, range(listOfID.length));
+  i++;
+  i = i%7;
+  setTimeout(updatePlot, 1000)
+}
+
+//create graph
 function plotGraph(){
   var listOfTrace = [];
   listOfID.forEach(id => {
@@ -108,7 +143,7 @@ function plotGraph(){
   
   i++;
   i = i%7;
-  setTimeout(plotGraph, 1000)
+  setTimeout(updatePlot, 1000)
 }
 
 setGaugeValue((Math.random() * 100)/100);
